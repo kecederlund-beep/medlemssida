@@ -58,14 +58,17 @@
 
   <script>
     const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
+
+    // Uppdatera hashvärden här för godkända medlemmar (SHA1 av medlemsnummer + förnamn, allt i gemener)
     const allowedHashes = [
-      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // 123456kalle
+      "0f2ea4e7f0e9d2e7c0b704b2f1a08e3e3b4b6e37" // 123456kalle
+      // Lägg till fler hashvärden här om du vill tillåta fler medlemmar
     ];
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
 
+    // SHA1-funktion (original, fungerar för denna applikation)
     function mySha1(msg) {
-      console.log('HASH FUNCTION ÄR VÅR');
       function rotl(n, s) { return n << s | n >>> 32 - s; }
       function tohex(i) { for (var h = "", s = 28; ; s -= 4) { h += (i >>> s & 0xf).toString(16); if (!s) return h; } }
       var H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
@@ -96,7 +99,7 @@
 
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
-      const combo = memberNumber + firstName;
+      const combo = memberNumber + firstName; // medlemsnummer först, förnamn efter, allt i gemener
       const hash = mySha1(combo);
 
       if (allowedHashes.includes(hash)) {
@@ -105,7 +108,7 @@
         showLinkIfTime();
       } else {
         failedAttempts++;
-        localStorage.setItem("failedAttempts", failedAttempts);
+        localStorage.setIt em("failedAttempts", failedAttempts);
         if (failedAttempts >= 3) {
           document.getElementById("blocked").classList.remove("hidden");
         } else {
