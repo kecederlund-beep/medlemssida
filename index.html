@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biljettsläpp</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha1.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -60,15 +59,32 @@
   <script>
     const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
     const allowedHashes = [
-      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // SHA-1 av 123456kalle
+      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // 123456kalle
     ];
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
 
-    function hashInput(text) {
-      const shaObj = new jsSHA("SHA-1", "TEXT");
-      shaObj.update(text);
-      return shaObj.getHash("HEX");
+    function sha1(msg) {
+      function rotl(n, s) { return n << s | n >>> 32 - s; }
+      function tohex(i) { for (var h = "", s = 28; ; s -= 4) { h += (i >>> s & 0xf).toString(16); if (!s) return h; } }
+      var H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
+      var ml = msg.length * 8, wa = [], i, t, W = new Array(80), a, b, c, d, e;
+      msg += String.fromCharCode(0x80);
+      while (msg.length % 64 - 56) msg += String.fromCharCode(0);
+      for (i = 0; i < msg.length; i++) wa[i >> 2] |= msg.charCodeAt(i) << 24 - (i % 4) * 8;
+      wa[wa.length] = ml;
+      for (i = 0; i < wa.length; i += 16) {
+        for (t = 0; t < 80; t++) W[t] = t < 16 ? wa[i + t] : rotl(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+        a = H0; b = H1; c = H2; d = H3; e = H4;
+        for (t = 0; t < 80; t++) {
+          var s = Math.floor(t / 20), f = [b & c | ~b & d, b ^ c ^ d, b & c | b & d | c & d, b ^ c ^ d][s],
+              K = [0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6][s],
+              T = rotl(a, 5) + f + e + K + W[t] >>> 0;
+          e = d; d = c; c = rotl(b, 30); b = a; a = T;
+        }
+        H0 = H0 + a >>> 0; H1 = H1 + b >>> 0; H2 = H2 + c >>> 0; H3 = H3 + d >>> 0; H4 = H4 + e >>> 0;
+      }
+      return tohex(H0) + tohex(H1) + tohex(H2) + tohex(H3) + tohex(H4);
     }
 
     function checkCredentials() {
@@ -80,7 +96,7 @@
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
       const combo = memberNumber + firstName;
-      const hash = hashInput(combo);
+      const hash = sha1(combo);
 
       if (allowedHashes.includes(hash)) {
         document.getElementById("wrong").classList.add("hidden");
