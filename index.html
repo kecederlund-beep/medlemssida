@@ -64,7 +64,7 @@
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
 
-    function sha1(msg) {
+    function mySha1(msg) {
       function rotl(n, s) { return n << s | n >>> 32 - s; }
       function tohex(i) { for (var h = "", s = 28; ; s -= 4) { h += (i >>> s & 0xf).toString(16); if (!s) return h; } }
       var H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
@@ -96,7 +96,7 @@
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
       const combo = memberNumber + firstName;
-      const hash = sha1(combo);
+      const hash = mySha1(combo);
 
       if (allowedHashes.includes(hash)) {
         document.getElementById("wrong").classList.add("hidden");
