@@ -23,9 +23,10 @@
       display: none;
       margin-top: 2em;
     }
-    input[type="password"] {
+    input[type="text"], input[type="password"] {
       padding: 0.5em;
       font-size: 1em;
+      margin: 0.5em;
     }
     button {
       margin-top: 1em;
@@ -41,30 +42,56 @@
 <body>
   <div class="container">
     <h1>Välkommen medlem!</h1>
-    <p>Sidan skyddas med lösenord. Ange det du fått via e-post:</p>
-    <input type="password" id="password" placeholder="Ange lösenord" />
+    <p>Ange ditt medlemsnummer och förnamn:</p>
+    <input type="text" id="memberNumber" placeholder="Medlemsnummer" />
+    <input type="text" id="firstName" placeholder="Förnamn" />
     <br />
-    <button onclick="checkPassword()">Logga in</button>
+    <button onclick="checkCredentials()">Logga in</button>
 
     <div id="link-section">
       <h2>Biljettsläppet är öppet!</h2>
       <p><a href="https://secure.tickster.com/bmh199t9gl5wjze" target="_blank">Gå till biljettlänken</a></p>
     </div>
 
-    <p id="wrong" class="hidden" style="color: red;">Fel lösenord. Försök igen.</p>
+    <p id="wrong" class="hidden" style="color: red;">Fel uppgifter. Försök igen.</p>
+    <p id="blocked" class="hidden" style="color: red;">För många felaktiga försök. Sidan är spärrad.</p>
   </div>
 
   <script>
-    const correctPassword = "lulea2025";
-    const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
+    const releaseTime = new Date("2025-08-13T13:10:00Z"); // 15:10 svensk tid
 
-    function checkPassword() {
-      const entered = document.getElementById("password").value;
-      if (entered === correctPassword) {
+    const allowedUsers = [
+      { number: "123456", name: "kalle" },
+      { number: "654321", name: "johanna" },
+      { number: "789012", name: "emil" }
+      // Lägg till fler användare här
+    ];
+
+    let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
+
+    function checkCredentials() {
+      if (failedAttempts >= 3) {
+        document.getElementById("blocked").classList.remove("hidden");
+        return;
+      }
+
+      const memberNumber = document.getElementById("memberNumber").value.trim();
+      const firstName = document.getElementById("firstName").value.trim().toLowerCase();
+
+      const validUser = allowedUsers.find(user => user.number === memberNumber && user.name === firstName);
+
+      if (validUser) {
         document.getElementById("wrong").classList.add("hidden");
+        document.getElementById("blocked").classList.add("hidden");
         showLinkIfTime();
       } else {
-        document.getElementById("wrong").classList.remove("hidden");
+        failedAttempts++;
+        localStorage.setItem("failedAttempts", failedAttempts);
+        if (failedAttempts >= 3) {
+          document.getElementById("blocked").classList.remove("hidden");
+        } else {
+          document.getElementById("wrong").classList.remove("hidden");
+        }
       }
     }
 
