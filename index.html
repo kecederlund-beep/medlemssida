@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biljettsläpp</title>
-  <script src="https://cdn.jsdelivr.net/npm/js-sha1/build/sha1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha1.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -60,10 +60,16 @@
   <script>
     const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
     const allowedHashes = [
-      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // 123456kalle
+      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // SHA-1 av 123456kalle
     ];
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
+
+    function hashInput(text) {
+      const shaObj = new jsSHA("SHA-1", "TEXT");
+      shaObj.update(text);
+      return shaObj.getHash("HEX");
+    }
 
     function checkCredentials() {
       if (failedAttempts >= 3) {
@@ -73,7 +79,8 @@
 
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
-      const hash = sha1(memberNumber + firstName);
+      const combo = memberNumber + firstName;
+      const hash = hashInput(combo);
 
       if (allowedHashes.includes(hash)) {
         document.getElementById("wrong").classList.add("hidden");
