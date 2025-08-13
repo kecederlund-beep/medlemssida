@@ -65,6 +65,7 @@
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
 
     function mySha1(msg) {
+      console.log('HASH FUNCTION ÄR VÅR');
       function rotl(n, s) { return n << s | n >>> 32 - s; }
       function tohex(i) { for (var h = "", s = 28; ; s -= 4) { h += (i >>> s & 0xf).toString(16); if (!s) return h; } }
       var H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
