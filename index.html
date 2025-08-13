@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Medlemssida - Biljettsläpp</title>
+  <title>Biljettsläpp</title>
   <script src="https://cdn.jsdelivr.net/npm/js-sha1/build/sha1.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
-      background-color: #f5f5f5;
+      background: #f5f5f5;
       text-align: center;
       padding: 2em;
     }
@@ -20,10 +20,6 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
-    #link-section {
-      display: none;
-      margin-top: 2em;
-    }
     input[type="text"] {
       padding: 0.5em;
       font-size: 1em;
@@ -33,7 +29,10 @@
       margin-top: 1em;
       padding: 0.6em 1.2em;
       font-size: 1em;
-      cursor: pointer;
+    }
+    #link-section {
+      display: none;
+      margin-top: 2em;
     }
     .hidden {
       display: none;
@@ -59,12 +58,9 @@
   </div>
 
   <script>
-    const releaseTime = new Date("2025-08-13T13:16:00Z"); // 15:16 svensk tid
-
-    // Lista med SHA-1-hashar av medlemsnummer+förnamn
+    const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
     const allowedHashes = [
-      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5", // exempel: 123456kalle
-      "40bd001563085fc35165329ea1ff5c5ecbdbbeef"  // exempel: 654321johanna
+      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5" // 123456kalle
     ];
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
@@ -77,12 +73,9 @@
 
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
-      const combo = memberNumber + firstName;
-      const hash = sha1(combo);
+      const hash = sha1(memberNumber + firstName);
 
-      const validUser = allowedHashes.includes(hash);
-
-      if (validUser) {
+      if (allowedHashes.includes(hash)) {
         document.getElementById("wrong").classList.add("hidden");
         document.getElementById("blocked").classList.add("hidden");
         showLinkIfTime();
