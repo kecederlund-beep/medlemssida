@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medlemssida - Biljettsläpp</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+      padding: 2em;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    #link-section {
+      display: none;
+      margin-top: 2em;
+    }
+    input[type="password"] {
+      padding: 0.5em;
+      font-size: 1em;
+    }
+    button {
+      margin-top: 1em;
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Välkommen medlem!</h1>
+    <p>Sidan skyddas med lösenord. Ange det du fått via e-post:</p>
+    <input type="password" id="password" placeholder="Ange lösenord" />
+    <br />
+    <button onclick="checkPassword()">Logga in</button>
+
+    <div id="link-section">
+      <h2>Biljettsläppet är öppet!</h2>
+      <p><a href="https://exempel.se/biljettslapp" target="_blank">Gå till biljettlänken</a></p>
+    </div>
+
+    <p id="wrong" class="hidden" style="color: red;">Fel lösenord. Försök igen.</p>
+  </div>
+
+  <script>
+    const correctPassword = "lulea2025"; // Ändra detta
+    const releaseTime = new Date("2025-08-13T09:00:00Z"); // UTC-tid = 11:00 svensk tid
+
+    function checkPassword() {
+      const entered = document.getElementById("password").value;
+      if (entered === correctPassword) {
+        document.getElementById("wrong").classList.add("hidden");
+        showLinkIfTime();
+      } else {
+        document.getElementById("wrong").classList.remove("hidden");
+      }
+    }
+
+    function showLinkIfTime() {
+      const now = new Date();
+      if (now >= releaseTime) {
+        document.getElementById("link-section").style.display = "block";
+      } else {
+        const remaining = Math.round((releaseTime - now)/1000/60);
+        alert("Biljettlänken blir tillgänglig om " + remaining + " minuter.");
+      }
+    }
+  </script>
+</body>
+</html>
