@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Medlemssida - Biljettsläpp</title>
+  <script src="https://cdn.jsdelivr.net/npm/js-sha1@0.6.0/src/sha1.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -23,7 +24,7 @@
       display: none;
       margin-top: 2em;
     }
-    input[type="text"], input[type="password"] {
+    input[type="text"] {
       padding: 0.5em;
       font-size: 1em;
       margin: 0.5em;
@@ -58,13 +59,12 @@
   </div>
 
   <script>
-    const releaseTime = new Date("2025-08-13T13:10:00Z"); // 15:10 svensk tid
+    const releaseTime = new Date("2025-08-13T13:16:00Z"); // 15:16 svensk tid
 
-    const allowedUsers = [
-      { number: "123456", name: "kalle" },
-      { number: "654321", name: "johanna" },
-      { number: "789012", name: "emil" }
-      // Lägg till fler användare här
+    // Lista med SHA-1-hashar av medlemsnummer+förnamn
+    const allowedHashes = [
+      "16d7a4fca7442dda3ad93c9a726597e4f0f6c1e5", // exempel: 123456kalle
+      "40bd001563085fc35165329ea1ff5c5ecbdbbeef"  // exempel: 654321johanna
     ];
 
     let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
@@ -77,8 +77,10 @@
 
       const memberNumber = document.getElementById("memberNumber").value.trim();
       const firstName = document.getElementById("firstName").value.trim().toLowerCase();
+      const combo = memberNumber + firstName;
+      const hash = sha1(combo);
 
-      const validUser = allowedUsers.find(user => user.number === memberNumber && user.name === firstName);
+      const validUser = allowedHashes.includes(hash);
 
       if (validUser) {
         document.getElementById("wrong").classList.add("hidden");
@@ -100,8 +102,10 @@
       if (now >= releaseTime) {
         document.getElementById("link-section").style.display = "block";
       } else {
-        const remaining = Math.round((releaseTime - now)/1000/60);
-        alert("Biljettlänken blir tillgänglig om " + remaining + " minuter.");
+        const remainingMs = releaseTime - now;
+        const minutes = Math.floor(remainingMs / 60000);
+        const seconds = Math.floor((remainingMs % 60000) / 1000);
+        alert("Biljettlänken blir tillgänglig om " + minutes + " minuter och " + seconds + " sekunder.");
       }
     }
   </script>
