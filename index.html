@@ -67,7 +67,9 @@
       const res = await fetch(API, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ memberNumber, firstName, email, turnstileToken: tsToken })
+        body: JSON.stringify({ memberNumber, firstName, email, turnstileToken: tsToken }),
+        mode: 'cors',
+        credentials: 'include'
       });
       const data = await res.json().catch(()=>({}));
 
@@ -75,7 +77,6 @@
         // ✅ Session-lås: navigera till /start?c=... så sätts cookie i förstaparts-kontekst
         window.location.href = data.start;
       } else if (res.status === 403 && data.reason === 'not_yet') {
-        // ⏳ Inte släppt än – visa minuter/sekunder kvar
         const ms = (data.releaseAt || 0) - Date.now();
         const m = Math.max(0, Math.floor(ms/60000));
         const s = Math.max(0, Math.floor((ms%60000)/1000));
