@@ -42,7 +42,10 @@
   // Turnstile token hantering
   let tsToken = '';
   function onTurnstile(token) { tsToken = token || ''; }
-  function onTurnstileExpired() { tsToken = ''; }
+  function onTurnstileExpired() {
+    tsToken = '';
+    if (window.turnstile) turnstile.reset(); // be om ny token när den gått ut
+  }
 
   document.getElementById('loginBtn').addEventListener('click', submitLogin);
 
@@ -66,7 +69,7 @@
     try {
       const res = await fetch(API, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({ memberNumber, firstName, email, turnstileToken: tsToken }),
         mode: 'cors',
         credentials: 'include'
@@ -77,6 +80,7 @@
         // ✅ Session-lås: navigera till /start?c=... så sätts cookie i förstaparts-kontekst
         window.location.href = data.start;
       } else if (res.status === 403 && data.reason === 'not_yet') {
+        // ⏳ Inte släppt än – visa minuter/sekunder kvar
         const ms = (data.releaseAt || 0) - Date.now();
         const m = Math.max(0, Math.floor(ms/60000));
         const s = Math.max(0, Math.floor((ms%60000)/1000));
@@ -86,7 +90,10 @@
       } else if (res.status === 400 && data.reason === 'turnstile_required') {
         msg.textContent = 'Bekräfta robotkontrollen först.';
       } else if (res.status === 403 && data.reason === 'bot_detected') {
-        msg.textContent = 'Robotkontrollen misslyckades. Ladda om sidan och försök igen.';
+        // 🔁 Viktigt: resetta widgeten så användaren får en NY token
+        if (window.turnstile) turnstile.reset();
+        tsToken = '';
+        msg.textContent = 'Robotkontrollen misslyckades. Försök igen.';
       } else {
         msg.textContent = 'Tekniskt fel. Försök igen strax.';
       }
