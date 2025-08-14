@@ -71,9 +71,9 @@
       });
       const data = await res.json().catch(()=>({}));
 
-      if (res.status === 200 && data.ok && data.url) {
-        // ✅ Inloggad och släpptid passerad – vidare till biljettlänk
-        window.location.href = data.url;
+if (res.status === 200 && data.ok && data.start) {
+  window.location.href = data.start; // går till /start?c=..., sätter cookie och dirigerar vidare
+}
       } else if (res.status === 403 && data.reason === 'not_yet') {
         // ⏳ Inte släppt än – visa minuter/sekunder kvar
         const ms = (data.releaseAt || 0) - Date.now();
