@@ -11,34 +11,53 @@
     button { cursor:pointer; }
     #msg { min-height: 1.5em; }
   </style>
+
+  <!-- Turnstile script -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <div class="box">
     <h1>Medlemsinlogg</h1>
-    <p>Ange medlemsnummer och förnamn (förnamn i små bokstäver).</p>
+    <p>Ange medlemsnummer, förnamn och e-post (förnamn/e-post kan skrivas i valfri text; vi normaliserar i servern).</p>
     <div>
       <input id="memberNumber" placeholder="Medlemsnummer">
       <input id="firstName" placeholder="Förnamn">
       <input id="email" placeholder="E-post">
     </div>
+
+    <!-- Turnstile-widget (din site key) -->
+    <div class="cf-turnstile"
+         data-sitekey="0x4AAAAAABrjb_SBoAoT0t2O"
+         data-callback="onTurnstile"
+         data-expired-callback="onTurnstileExpired"></div>
+
     <button id="loginBtn">Logga in</button>
     <p id="msg"></p>
   </div>
 
 <script>
-  // 🔗 Byt till din Worker-URL:
+  // 🔗 Din Worker-endpoint:
   const API = 'https://crimson-darkness-35c2.k-e-cederlund.workers.dev/api/login';
+
+  // Turnstile token hantering
+  let tsToken = '';
+  function onTurnstile(token) { tsToken = token || ''; }
+  function onTurnstileExpired() { tsToken = ''; }
 
   document.getElementById('loginBtn').addEventListener('click', submitLogin);
 
   async function submitLogin() {
     const memberNumber = document.getElementById('memberNumber').value.trim();
     const firstName    = document.getElementById('firstName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const msg = document.getElementById('msg');
+    const email        = document.getElementById('email').value.trim();
+    const msg          = document.getElementById('msg');
 
-    if (!memberNumber || !firstName) {
-      msg.textContent = 'Fyll i båda fälten.';
+    if (!memberNumber || !firstName || !email) {
+      msg.textContent = 'Fyll i alla tre fälten.';
+      return;
+    }
+    if (!tsToken) {
+      msg.textContent = 'Bekräfta robotkontrollen först.';
       return;
     }
 
@@ -48,7 +67,7 @@
       const res = await fetch(API, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ memberNumber, firstName, email })
+        body: JSON.stringify({ memberNumber, firstName, email, turnstileToken: tsToken })
       });
       const data = await res.json().catch(()=>({}));
 
@@ -63,6 +82,10 @@
         msg.textContent = `Biljettlänken blir tillgänglig om ${m} min ${s} s.`;
       } else if (res.status === 401) {
         msg.textContent = 'Fel uppgifter. Försök igen.';
+      } else if (res.status === 400 && data.reason === 'turnstile_required') {
+        msg.textContent = 'Bekräfta robotkontrollen först.';
+      } else if (res.status === 403 && data.reason === 'bot_detected') {
+        msg.textContent = 'Robotkontrollen misslyckades. Ladda om sidan och försök igen.';
       } else {
         msg.textContent = 'Tekniskt fel. Försök igen strax.';
       }
