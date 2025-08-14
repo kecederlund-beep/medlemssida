@@ -1,133 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Biljettsläpp</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medlemssida</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      text-align: center;
-      padding: 2em;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 2em;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    }
-    input[type="text"] {
-      padding: 0.5em;
-      font-size: 1em;
-      margin: 0.5em;
-    }
-    button {
-      margin-top: 1em;
-      padding: 0.6em 1.2em;
-      font-size: 1em;
-    }
-    #link-section {
-      display: none;
-      margin-top: 2em;
-    }
-    .hidden {
-      display: none;
-    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; background:#f5f5f5; }
+    .box { max-width: 520px; margin: 40px auto; padding: 18px; background:#fff; border:1px solid #ddd; border-radius: 10px; text-align:center; }
+    input, button { font-size: 16px; padding: 10px 12px; margin: 6px 4px; }
+    button { cursor:pointer; }
+    #msg { min-height: 1.5em; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Välkommen medlem!</h1>
-    <p>Ange ditt medlemsnummer och förnamn:</p>
-    <input type="text" id="memberNumber" placeholder="Medlemsnummer" />
-    <input type="text" id="firstName" placeholder="Förnamn" />
-    <br />
-    <button onclick="checkCredentials()">Logga in</button>
-
-    <div id="link-section">
-      <h2>Biljettsläppet är öppet!</h2>
-      <p><a href="https://secure.tickster.com/bmh199t9gl5wjze" target="_blank">Gå till biljettlänken</a></p>
+  <div class="box">
+    <h1>Medlemsinlogg</h1>
+    <p>Ange medlemsnummer och förnamn (förnamn i små bokstäver).</p>
+    <div>
+      <input id="memberNumber" placeholder="Medlemsnummer">
+      <input id="firstName" placeholder="Förnamn">
     </div>
-
-    <p id="wrong" class="hidden" style="color: red;">Fel uppgifter. Försök igen.</p>
-    <p id="blocked" class="hidden" style="color: red;">För många felaktiga försök. Sidan är spärrad.</p>
+    <button id="loginBtn">Logga in</button>
+    <p id="msg"></p>
   </div>
 
-  <script>
-    const releaseTime = new Date("2025-08-13T12:55:00Z"); // 14:55 svensk tid
+<script>
+  // 🔗 Byt till din Worker-URL:
+  const API = 'https://crimson-darkness-35c2.k-e-cederlund.workers.dev/api/login';
 
-    // Uppdatera hashvärden här för godkända medlemmar (SHA1 av medlemsnummer + förnamn, allt i gemener)
-    const allowedHashes = [
-      "0f2ea4e7f0e9d2e7c0b704b2f1a08e3e3b4b6e37" // 123456kalle
-      // Lägg till fler hashvärden här om du vill tillåta fler medlemmar
-    ];
+  document.getElementById('loginBtn').addEventListener('click', submitLogin);
 
-    let failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
+  async function submitLogin() {
+    const memberNumber = document.getElementById('memberNumber').value.trim();
+    const firstName    = document.getElementById('firstName').value.trim();
+    const msg = document.getElementById('msg');
 
-    // SHA1-funktion (original, fungerar för denna applikation)
-    function mySha1(msg) {
-      function rotl(n, s) { return n << s | n >>> 32 - s; }
-      function tohex(i) { for (var h = "", s = 28; ; s -= 4) { h += (i >>> s & 0xf).toString(16); if (!s) return h; } }
-      var H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
-      var ml = msg.length * 8, wa = [], i, t, W = new Array(80), a, b, c, d, e;
-      msg += String.fromCharCode(0x80);
-      while (msg.length % 64 - 56) msg += String.fromCharCode(0);
-      for (i = 0; i < msg.length; i++) wa[i >> 2] |= msg.charCodeAt(i) << 24 - (i % 4) * 8;
-      wa[wa.length] = ml;
-      for (i = 0; i < wa.length; i += 16) {
-        for (t = 0; t < 80; t++) W[t] = t < 16 ? wa[i + t] : rotl(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
-        a = H0; b = H1; c = H2; d = H3; e = H4;
-        for (t = 0; t < 80; t++) {
-          var s = Math.floor(t / 20), f = [b & c | ~b & d, b ^ c ^ d, b & c | b & d | c & d, b ^ c ^ d][s],
-              K = [0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6][s],
-              T = rotl(a, 5) + f + e + K + W[t] >>> 0;
-          e = d; d = c; c = rotl(b, 30); b = a; a = T;
-        }
-        H0 = H0 + a >>> 0; H1 = H1 + b >>> 0; H2 = H2 + c >>> 0; H3 = H3 + d >>> 0; H4 = H4 + e >>> 0;
-      }
-      return tohex(H0) + tohex(H1) + tohex(H2) + tohex(H3) + tohex(H4);
+    if (!memberNumber || !firstName) {
+      msg.textContent = 'Fyll i båda fälten.';
+      return;
     }
 
-    function checkCredentials() {
-      if (failedAttempts >= 3) {
-        document.getElementById("blocked").classList.remove("hidden");
-        return;
-      }
+    msg.textContent = 'Kontrollerar...';
 
-      const memberNumber = document.getElementById("memberNumber").value.trim();
-      const firstName = document.getElementById("firstName").value.trim().toLowerCase();
-      const combo = memberNumber + firstName; // medlemsnummer först, förnamn efter, allt i gemener
-      const hash = mySha1(combo);
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ memberNumber, firstName })
+      });
+      const data = await res.json().catch(()=>({}));
 
-      if (allowedHashes.includes(hash)) {
-        document.getElementById("wrong").classList.add("hidden");
-        document.getElementById("blocked").classList.add("hidden");
-        showLinkIfTime();
+      if (res.status === 200 && data.ok && data.url) {
+        // ✅ Inloggad och släpptid passerad – vidare till biljettlänk
+        window.location.href = data.url;
+      } else if (res.status === 403 && data.reason === 'not_yet') {
+        // ⏳ Inte släppt än – visa minuter/sekunder kvar
+        const ms = (data.releaseAt || 0) - Date.now();
+        const m = Math.max(0, Math.floor(ms/60000));
+        const s = Math.max(0, Math.floor((ms%60000)/1000));
+        msg.textContent = `Biljettlänken blir tillgänglig om ${m} min ${s} s.`;
+      } else if (res.status === 401) {
+        msg.textContent = 'Fel uppgifter. Försök igen.';
       } else {
-        failedAttempts++;
-        localStorage.setIt em("failedAttempts", failedAttempts);
-        if (failedAttempts >= 3) {
-          document.getElementById("blocked").classList.remove("hidden");
-        } else {
-          document.getElementById("wrong").classList.remove("hidden");
-        }
+        msg.textContent = 'Tekniskt fel. Försök igen strax.';
       }
+    } catch (e) {
+      msg.textContent = 'Nätverksfel. Försök igen.';
     }
-
-    function showLinkIfTime() {
-      const now = new Date();
-      if (now >= releaseTime) {
-        document.getElementById("link-section").style.display = "block";
-      } else {
-        const remainingMs = releaseTime - now;
-        const minutes = Math.floor(remainingMs / 60000);
-        const seconds = Math.floor((remainingMs % 60000) / 1000);
-        alert("Biljettlänken blir tillgänglig om " + minutes + " minuter och " + seconds + " sekunder.");
-      }
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
