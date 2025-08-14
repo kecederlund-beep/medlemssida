@@ -19,6 +19,7 @@
     <div>
       <input id="memberNumber" placeholder="Medlemsnummer">
       <input id="firstName" placeholder="Förnamn">
+      <input id="email" placeholder="E-post">
     </div>
     <button id="loginBtn">Logga in</button>
     <p id="msg"></p>
@@ -33,6 +34,7 @@
   async function submitLogin() {
     const memberNumber = document.getElementById('memberNumber').value.trim();
     const firstName    = document.getElementById('firstName').value.trim();
+    const email = document.getElementById('email').value.trim();
     const msg = document.getElementById('msg');
 
     if (!memberNumber || !firstName) {
@@ -46,7 +48,7 @@
       const res = await fetch(API, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ memberNumber, firstName })
+        body: JSON.stringify({ memberNumber, firstName, email })
       });
       const data = await res.json().catch(()=>({}));
 
